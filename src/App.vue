@@ -232,8 +232,9 @@ const packages = [
 // ==============================================
 // 🔑 PANCAKE POS CREDENTIALS
 // ==============================================
-const PANCAKE_WEBHOOK_URL = '' // ← I-PASTE ANG WEBHOOK URL DITO
-const PANCAKE_API_KEY = '8ed4ddab5ba8b08eeb789989974ac63f' // ✅ Nakalagay na!
+const SHOP_ID = '408130136'
+const PANCAKE_API_KEY = '8ed4ddab5ba8b08eeb789989974ac63f'
+const PANCAKE_CREATE_ORDER_URL = 'https://pos.pancake.biz/api/orders'
 
 async function submitOrder() {
   // Validation
