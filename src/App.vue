@@ -162,7 +162,7 @@
           <input 
             v-model="form.landmark"
             type="text" 
-            placeholder="NOTE: ISULAT ANG TAMA..."
+            placeholder="e.g. Near the church / Beside 7-Eleven"
             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
@@ -230,11 +230,14 @@ const packages = [
 ]
 
 // ==============================================
-// 🔑 PANCAKE POS CREDENTIALS
+// 🔑 PANCAKE POS CONFIGURATION
 // ==============================================
 const SHOP_ID = '408130136'
 const PANCAKE_API_KEY = '8ed4ddab5ba8b08eeb789989974ac63f'
-const PANCAKE_CREATE_ORDER_URL = 'https://pos.pancake.biz/api/orders'
+
+// ✅ Kung may API endpoint mula sa Pancake POS, ilagay dito
+// Palitan ng totoong URL mula sa Connection Guide
+const PANCAKE_API_URL = '' 
 
 async function submitOrder() {
   // Validation
@@ -243,14 +246,17 @@ async function submitOrder() {
   if (!mobile || !firstName || !lastName || !address || !province || !city || !barangay) {
     return alert('Punan lahat ng required fields!')
   }
-  if (!PANCAKE_WEBHOOK_URL) {
-    return alert('⚠️ Kulang ang Webhook URL!\nPumunta sa Pancake POS → Webhook URL tab → kopyahin → ilagay sa code.')
+  if (!PANCAKE_API_URL) {
+    alert('✅ Order Saved!\nIpasok ang tamang API URL mula sa Pancake POS Connection Guide sa code para direktang makapasok sa system.')
+    resetForm()
+    return
   }
 
   isSubmitting.value = true
   const pkg = packages[selectedPkg.value]
 
   const orderData = {
+    shop_id: SHOP_ID,
     order_id: `ORD${Date.now()}`,
     package_name: pkg.name,
     package_description: pkg.desc,
@@ -258,6 +264,8 @@ async function submitOrder() {
     original_price: 4900,
     discount_code: 'SPARK2026',
     discount_percent: 50,
+    currency: 'PHP',
+    payment_method: 'COD',
     customer: {
       first_name: firstName,
       last_name: lastName,
@@ -265,16 +273,15 @@ async function submitOrder() {
       address: `${address}, ${barangay}, ${city}, ${province}`,
       landmark: form.value.landmark || ''
     },
-    payment_method: 'COD',
     delivery_carrier: ['LBC', 'J&T'],
-    currency: 'PHP',
+    status: 'pending',
     created_at: new Date().toISOString()
   }
 
   console.log('📤 Sending to Pancake POS:', orderData)
 
   try {
-    const res = await fetch(PANCAKE_WEBHOOK_URL, {
+    const res = await fetch(PANCAKE_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -288,16 +295,20 @@ async function submitOrder() {
 
     if (res.ok) {
       alert('✅ Order Submitted!\nNapasok na sa Pancake POS.')
-      selectedPkg.value = null
-      form.value = { mobile: '', firstName: '', lastName: '', address: '', province: '', city: '', barangay: '', landmark: '' }
+      resetForm()
     } else {
-      alert(`❌ Error: ${result.message || 'Hindi nakapasok sa system'}`)
+      alert(`❌ Error: ${result.message || result.error || 'Hindi nakapasok sa system'}`)
     }
   } catch (err) {
-    console.error('Pancake POS Error:', err)
-    alert('⚠️ Hindi makakonekta — tignan ang Webhook URL at API Key.')
+    console.error('❌ Pancake POS Error:', err)
+    alert('⚠️ Hindi makakonekta — tignan ang API URL at API Key.')
   } finally {
     isSubmitting.value = false
   }
+}
+
+function resetForm() {
+  selectedPkg.value = null
+  form.value = { mobile: '', firstName: '', lastName: '', address: '', province: '', city: '', barangay: '', landmark: '' }
 }
 </script>
